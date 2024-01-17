@@ -1,4 +1,5 @@
 import pygame
+import datetime as dt
 from solver import valid, solve_board
 class Patch(pygame.sprite.Sprite):
     def __init__(self, side, row, col, value, solid = True, penciled=False):
@@ -52,6 +53,24 @@ class Patch(pygame.sprite.Sprite):
         screen.blit(text_surface, self.text_pos)
         # pygame.display.flip()
 
+class Clock(pygame.sprite.Sprite):
+    def __init__(self, patch_size):
+        self.datetime = dt.datetime.now()
+        self.patch_size = patch_size
+    def get_time(self):
+        return dt.datetime.now()-self.datetime
+
+    def draw(self, screen):
+        time = self.get_time()
+        seconds = time.seconds
+        hours = time.seconds//3600
+        minutes = (seconds-hours*3600) // 60
+        seconds = seconds - hours*3600 - minutes*60
+
+        font = pygame.font.SysFont('DS-Digital', 32)
+        text_surface = font.render(f"{str(hours).zfill(2)}:{str(minutes).zfill(2)}:{str(seconds).zfill(2)}", True,(0,0,0))
+        screen.blit(text_surface, (self.patch_size*4, self.patch_size*9))
+
 class Grid(pygame.sprite.Sprite):
     board = [
         [5, 3, 0, 0, 7, 0, 0, 0, 0],
@@ -74,6 +93,7 @@ class Grid(pygame.sprite.Sprite):
                 if(self.patches[i][j].value == 0):
                     self.patches[i][j].solid = False
         self.penciled = []
+        self.clock = Clock(self.patch_side)
     def get_patch(self, pos):
         """ takes the position and returns the patch coordinates"""
         return (pos[1]//self.patch_side, pos[0]//self.patch_side)
@@ -139,6 +159,7 @@ class Grid(pygame.sprite.Sprite):
         for i in range(9):
             for j in range(9):
                 self.patches[i][j].draw(screen)
+        self.clock.draw(screen)
 
 pygame.init()
 screen = pygame.display.set_mode((540,600))
