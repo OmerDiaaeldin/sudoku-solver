@@ -19,15 +19,30 @@ class Patch(pygame.sprite.Sprite):
     def un_highlight(self):
         self.color = (0,0,0)
         self.line_width = 1
-    def edit(self, val):
+
+    def confirm(self):
+        self.text_pos = (self.col*self.side + self.side//4, self.row*self.side + self.side//4)
+        self.text_color = (0, 0, 200)
+    def edit(self, event):
+        """return 0, if nothing changed, 1 if added value, 2 if deleted value"""
         if self.solid:
             return
+        old_value = self.value
+        if event.key == pygame.K_BACKSPACE:
+            self.value = 0
+            if(old_value != 0):
+                return 2
+            return 0
+        val = chr(event.key)
         numbers = [str(x) for x in range(1, 10)]
         print(val)
         if val in numbers:
             self.value = val
             self.text_pos = (self.col*self.side, self.row*self.side)
             self.text_color = (200,200,200)
+            if(old_value == 0):
+                return 1
+            return 0
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, pygame.Rect(self.col*self.side, self.row*self.side, self.side,self.side),self.line_width)
@@ -59,15 +74,29 @@ class Grid(pygame.sprite.Sprite):
             for j in range(9):
                 if(self.patches[i][j].value == 0):
                     self.patches[i][j].solid = False
+        self.penciled = []
     def get_patch(self, pos):
         """ takes the position and returns the patch coordinates"""
         return (pos[1]//self.patch_side, pos[0]//self.patch_side)
-    def edit(self, val):
+    def confirm_additions(self):
+        print(f"Confirmed additions: {self.penciled}")
+        for coordinates in self.penciled:
+            self.patches[coordinates[0]][coordinates[1]].confirm()
+    def edit(self, event):
+        if(event.key == pygame.K_c):
+            print("here")
+            self.confirm_additions()
+            return
         if(not self.highlighted_patch):
             return
         row, col = self.highlighted_patch
         patch = self.patches[row][col]
-        patch.edit(val)
+        status = patch.edit(event)
+        print(f"status: {status}")
+        if(status == 1):
+            self.penciled.append((row, col))
+        elif(status == 2):
+            self.penciled.remove((row, col))
 
     def highlight(self, pos):
         if(self.highlighted_patch):
@@ -100,7 +129,7 @@ while(running):
         if event.type == pygame.MOUSEBUTTONDOWN:
             grid.highlight(event.pos)
         if event.type == pygame.KEYDOWN:
-            grid.edit(chr(event.key))
+            grid.edit(event)
     screen.fill((255,255,255))
     grid.draw(screen)
     pygame.display.flip()
