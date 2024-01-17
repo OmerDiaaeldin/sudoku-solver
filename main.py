@@ -1,5 +1,5 @@
 import pygame
-# import main
+from solver import valid
 class Patch(pygame.sprite.Sprite):
     def __init__(self, side, row, col, value, solid = True, penciled=False):
         pygame.sprite.Sprite.__init__(self)
@@ -35,9 +35,8 @@ class Patch(pygame.sprite.Sprite):
             return 0
         val = chr(event.key)
         numbers = [str(x) for x in range(1, 10)]
-        print(val)
         if val in numbers:
-            self.value = val
+            self.value = int(val)
             self.text_pos = (self.col*self.side, self.row*self.side)
             self.text_color = (200,200,200)
             if(old_value == 0):
@@ -79,12 +78,24 @@ class Grid(pygame.sprite.Sprite):
         """ takes the position and returns the patch coordinates"""
         return (pos[1]//self.patch_side, pos[0]//self.patch_side)
     def confirm_additions(self):
-        print(f"Confirmed additions: {self.penciled}")
+        """return True if the additions are valid otherwise false. delete the penciled entires anyway"""
+        affirm = True
         for coordinates in self.penciled:
-            self.patches[coordinates[0]][coordinates[1]].confirm()
+            if not valid(self.patches, self.patches[coordinates[0]][coordinates[1]].value, coordinates):
+                affirm = False
+                break
+
+        if(affirm):
+            for coordinates in self.penciled:
+                self.patches[coordinates[0]][coordinates[1]].confirm()
+        else:
+            for coordinates in self.penciled:
+                self.patches[coordinates[0]][coordinates[1]].value = 0
+
+        for coordinates in self.penciled:
+            self.penciled.remove(coordinates)
     def edit(self, event):
         if(event.key == pygame.K_c):
-            print("here")
             self.confirm_additions()
             return
         if(not self.highlighted_patch):
@@ -92,7 +103,6 @@ class Grid(pygame.sprite.Sprite):
         row, col = self.highlighted_patch
         patch = self.patches[row][col]
         status = patch.edit(event)
-        print(f"status: {status}")
         if(status == 1):
             self.penciled.append((row, col))
         elif(status == 2):
