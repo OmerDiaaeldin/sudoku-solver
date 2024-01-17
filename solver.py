@@ -1,20 +1,24 @@
+import time
 def solve_board(board):
     pos = find_empty(board)
     if not pos:
         return True
+    board[pos[0]][pos[1]].color = (200,0,0)
     for i in range(1,10):
         if(valid(board,i,pos)):
-            board[pos[0]][pos[1]] = i
+            board[pos[0]][pos[1]].value = i
+            board[pos[0]][pos[1]].color = (0, 0, 0)
             if(solve_board(board)):
                 return True
-            board[pos[0]][pos[1]] = 0
+            board[pos[0]][pos[1]].color = (200, 0, 0)
+            board[pos[0]][pos[1]].value = 0
 
     return False
 
 def find_empty(board):
     for i in range(len(board)):
         for j in range(len(board[0])):
-            if(board[i][j] == 0):
+            if(board[i][j].value == 0):
                 return (i, j)
     return None
 
@@ -34,14 +38,3 @@ def valid(board, num, pos):
             if(board[i][j].value == num and not (i == row and j == col)):
                 return False
     return True
-
-def print_board(board):
-    for row in range(len(board)):
-        if (row % 3 == 0 and row != 0):
-            print("----------------------")
-        for column in range(len(board[0])):
-            if(column%3 == 0 and column != 0):
-                print("|", end=" ")
-            print(board[row][column], end=" ")
-            if(column == 8):
-                print()

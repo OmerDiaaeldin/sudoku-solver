@@ -1,5 +1,5 @@
 import pygame
-from solver import valid
+from solver import valid, solve_board
 class Patch(pygame.sprite.Sprite):
     def __init__(self, side, row, col, value, solid = True, penciled=False):
         pygame.sprite.Sprite.__init__(self)
@@ -98,6 +98,9 @@ class Grid(pygame.sprite.Sprite):
         if(event.key == pygame.K_c):
             self.confirm_additions()
             return
+        if(event.key == pygame.K_s):
+            self.solution()
+            return
         if(not self.highlighted_patch):
             return
         row, col = self.highlighted_patch
@@ -114,6 +117,18 @@ class Grid(pygame.sprite.Sprite):
             self.patches[row][col].un_highlight()
         self.highlighted_patch = self.get_patch(pos)
         self.patches[self.highlighted_patch[0]][self.highlighted_patch[1]].highlight()
+    def solution(self):
+        # erase all the values by the user and solve from scratch
+        for i in range(len(self.board)):
+            for j in range(len(self.board[0])):
+                self.patches[i][j].color = (0,0,0)
+                self.patches[i][j].text_color = (0, 0, 0)
+                self.patches[i][j].color = (0, 0, 0)
+                if(not self.patches[i][j].solid):
+                    self.patches[i][j].value = 0
+        solve_board(self.patches)
+        print("DONE!!!")
+
     def draw(self, screen):
         dim = screen.get_width()
         pygame.draw.line(screen, (0,0,0), (0, dim/3), (dim,dim/3), 4)
